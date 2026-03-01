@@ -1,0 +1,111 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+model User {
+  id             String     @id @default(cuid())
+  username       String     @unique
+  password       String
+  isAdmin        Boolean    @default(false)
+  isPremium      Boolean    @default(false)
+  premiumExpires DateTime?
+  createdAt      DateTime   @default(now())
+  bookmarks      Bookmark[]
+}
+
+model Movie {
+  id            String         @id @default(cuid())
+  title         String
+  overview      String?        @db.Text
+  posterUrl     String?
+  backdropUrl   String?
+  rating        Float          @default(0)
+  year          Int
+  duration      Int? // in minutes
+  genre         String         @default("")
+  language      String?
+  isSeries      Boolean        @default(false)
+  isTrending    Boolean        @default(false)
+  isIconic      Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  cast          Cast[]
+  downloadLinks DownloadLink[]
+  series        Series?
+  bookmarks     Bookmark[]
+}
+
+model Series {
+  id      String   @id @default(cuid())
+  movie   Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId String   @unique
+  status  String   @default("Ongoing") // Ongoing, Completed
+  seasons Season[]
+}
+
+model Season {
+  id           String    @id @default(cuid())
+  series       Series    @relation(fields: [seriesId], references: [id], onDelete: Cascade)
+  seriesId     String
+  seasonNumber Int
+  episodes     Episode[]
+}
+
+model Episode {
+  id            String         @id @default(cuid())
+  season        Season         @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  seasonId      String
+  episodeNumber Int
+  title         String
+  thumbnailUrl  String?
+  duration      Int?
+  overview      String?        @db.Text
+  downloadLinks DownloadLink[]
+}
+
+model Cast {
+  id         String  @id @default(cuid())
+  movie      Movie   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId    String
+  name       String
+  character  String
+  profileUrl String?
+}
+
+model DownloadLink {
+  id         String   @id @default(cuid())
+  quality    String   // "720p", "1080p", etc.
+  url        String   @db.Text
+  source     String   @default("") // source name
+  movie      Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId    String?
+  episode    Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  episodeId  String?
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  movie     Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId   String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, movieId])
+}
+
+model Settings {
+  id                 String   @id @default(cuid())
+  primaryColor       String   @default("#FFC107")
+  headerText         String   @default("BurmaYoteShin")
+  allDownloadEnabled Boolean  @default(false)
+}
