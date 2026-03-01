@@ -213,6 +213,33 @@ export async function GET() {
       })
     }
 
+    // Create admin user if not exists
+    const existingAdmin = await db.user.findUnique({ where: { username: 'Admin8676' } })
+    if (!existingAdmin) {
+      await db.user.create({
+        data: {
+          id: generateId(),
+          username: 'Admin8676',
+          password: 'Admin8676',
+          isAdmin: true,
+          isPremium: true,
+        }
+      })
+    }
+
+    // Create settings if not exists
+    const existingSettings = await db.settings.findFirst()
+    if (!existingSettings) {
+      await db.settings.create({
+        data: {
+          id: generateId(),
+          primaryColor: '#FFD700',
+          headerText: 'BurmaYoteShin',
+          allDownloadEnabled: false,
+        }
+      })
+    }
+
     // Seed movies
     for (const movie of sampleMovies) {
       const { seriesData, cast, downloadLinks, ...movieData } = movie

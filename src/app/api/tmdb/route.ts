@@ -110,6 +110,16 @@ export async function POST(request: NextRequest) {
 
     const title = data.title || data.name || 'Unknown'
 
+    // Parse year safely
+    const dateStr = data.release_date || data.first_air_date || ''
+    let year = 2024
+    if (dateStr && dateStr.length >= 4) {
+      const parsed = parseInt(dateStr.substring(0, 4))
+      if (!isNaN(parsed) && parsed > 1900 && parsed < 2100) {
+        year = parsed
+      }
+    }
+
     // Transform for our database
     const transformed = {
       title,
@@ -117,7 +127,7 @@ export async function POST(request: NextRequest) {
       posterUrl: data.poster_path ? `${TMDB_IMAGE_BASE}/w500${data.poster_path}` : null,
       backdropUrl: data.backdrop_path ? `${TMDB_IMAGE_BASE}/original${data.backdrop_path}` : null,
       rating: data.vote_average || 0,
-      year: parseInt((data.release_date || data.first_air_date || '2024').substring(0, 4)) || 2024,
+      year,
       duration: data.runtime || (data.episode_run_time?.[0]) || null,
       genre: data.genres?.map((g: { name: string }) => g.name).join(', ') || '',
       language: data.original_language || 'en',
