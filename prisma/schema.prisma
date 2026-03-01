@@ -6,9 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_DATABASE_URL")
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -25,12 +24,12 @@ model User {
 model Movie {
   id            String         @id @default(cuid())
   title         String
-  overview      String?        @db.Text
+  overview      String?
   posterUrl     String?
   backdropUrl   String?
   rating        Float          @default(0)
   year          Int
-  duration      Int? // in minutes
+  duration      Int?
   genre         String         @default("")
   language      String?
   isSeries      Boolean        @default(false)
@@ -48,7 +47,7 @@ model Series {
   id      String   @id @default(cuid())
   movie   Movie    @relation(fields: [movieId], references: [id], onDelete: Cascade)
   movieId String   @unique
-  status  String   @default("Ongoing") // Ongoing, Completed
+  status  String   @default("Ongoing")
   seasons Season[]
 }
 
@@ -68,7 +67,7 @@ model Episode {
   title         String
   thumbnailUrl  String?
   duration      Int?
-  overview      String?        @db.Text
+  overview      String?
   downloadLinks DownloadLink[]
 }
 
@@ -82,14 +81,14 @@ model Cast {
 }
 
 model DownloadLink {
-  id         String   @id @default(cuid())
-  quality    String   // "720p", "1080p", etc.
-  url        String   @db.Text
-  source     String   @default("") // source name
-  movie      Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
-  movieId    String?
-  episode    Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
-  episodeId  String?
+  id        String   @id @default(cuid())
+  quality   String
+  url       String
+  source    String   @default("")
+  movie     Movie?   @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  movieId   String?
+  episode   Episode? @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+  episodeId String?
 }
 
 model Bookmark {
