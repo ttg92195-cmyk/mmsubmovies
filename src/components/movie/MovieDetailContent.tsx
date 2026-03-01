@@ -153,7 +153,7 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
   return (
     <div className="min-h-screen bg-black pb-20">
       {/* Backdrop */}
-      <div className="relative h-56 md:h-72">
+      <div className="relative h-48">
         {movie.backdropUrl ? (
           <>
             <Image
@@ -164,11 +164,9 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
               priority
               unoptimized
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
           </>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-b from-gray-900 to-black" />
-        )}
+        ) : null}
         
         {/* Back Button */}
         <button
@@ -192,11 +190,11 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
       </div>
 
       {/* Content */}
-      <div className="relative -mt-16 px-4">
+      <div className="relative -mt-12 px-4">
         {/* Poster and Info */}
         <div className="flex gap-3">
-          <div className="w-24 md:w-28 flex-shrink-0">
-            <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-xl border border-white/10">
+          <div className="w-20 flex-shrink-0">
+            <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-xl">
               {movie.posterUrl ? (
                 <Image
                   src={movie.posterUrl}
@@ -208,19 +206,19 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
               ) : (
                 <div className="w-full h-full bg-secondary flex items-center justify-center">
                   {movie.isSeries ? (
-                    <Tv className="w-8 h-8 text-muted-foreground" />
+                    <Tv className="w-6 h-6 text-muted-foreground" />
                   ) : (
-                    <User className="w-8 h-8 text-muted-foreground" />
+                    <User className="w-6 h-6 text-muted-foreground" />
                   )}
                 </div>
               )}
             </div>
           </div>
           
-          <div className="flex-1 pt-16">
-            <h1 className="text-lg md:text-xl font-bold text-white">{movie.title}</h1>
-            <div className="flex items-center gap-2 mt-1">
-              <Star className="w-4 h-4 fill-primary text-primary" />
+          <div className="flex-1 pt-8">
+            <h1 className="text-base font-bold text-white">{movie.title}</h1>
+            <div className="flex items-center gap-1.5 mt-1 text-xs">
+              <Star className="w-3 h-3 fill-primary text-primary" />
               <span className="text-white">{movie.rating.toFixed(1)}</span>
               <span className="text-gray-400">•</span>
               <span className="text-gray-400">{movie.year}</span>
@@ -231,12 +229,12 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
                 </>
               )}
             </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {movie.genre.split(', ').map(g => (
-                <Badge key={g} variant="secondary" className="text-xs">{g}</Badge>
+            <div className="flex flex-wrap gap-1 mt-2">
+              {movie.genre.split(', ').slice(0, 3).map(g => (
+                <Badge key={g} variant="secondary" className="text-[10px] px-1.5 py-0">{g}</Badge>
               ))}
               {movie.isSeries && movie.series && (
-                <Badge variant="outline" className="text-xs border-primary text-primary">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-primary text-primary">
                   {movie.series.status}
                 </Badge>
               )}
@@ -245,37 +243,28 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-2 mt-5">
+        <div className="flex gap-2 mt-4">
           <Button
-            className="flex-1 h-10"
+            className="flex-1 h-9 text-sm"
             style={{ backgroundColor: primaryColor, color: 'black' }}
             onClick={handleWatchNow}
           >
-            <Play className="w-4 h-4 mr-1.5" />
+            <Play className="w-3.5 h-3.5 mr-1" />
             Watch Now
           </Button>
           <Button
             variant="outline"
-            className="flex-1 h-10 border-primary text-primary hover:bg-primary/10"
+            className="flex-1 h-9 text-sm border-primary text-primary hover:bg-primary/10"
             onClick={handleDownload}
           >
-            <Download className="w-4 h-4 mr-1.5" />
+            <Download className="w-3.5 h-3.5 mr-1" />
             Download
           </Button>
         </div>
 
-        {/* Download Warning */}
-        {!allDownloadEnabled && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-3">
-            <p className="text-yellow-400 text-xs">
-              ⚠️ Enable &quot;All Download&quot; in Menu → Download to access download links
-            </p>
-          </div>
-        )}
-
         {/* Synopsis */}
-        <div className="mt-5">
-          <h3 className="font-semibold mb-2 text-sm" style={{ color: primaryColor }}>SYNOPSIS</h3>
+        <div className="mt-4">
+          <h3 className="font-semibold mb-1 text-xs" style={{ color: primaryColor }}>SYNOPSIS</h3>
           <p className="text-gray-300 text-xs leading-relaxed">{movie.overview || 'No synopsis available.'}</p>
         </div>
 
@@ -339,29 +328,29 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
 
         {/* Cast */}
         {movie.cast && movie.cast.length > 0 && (
-          <div className="mt-5">
-            <h3 className="font-semibold mb-2 text-sm" style={{ color: primaryColor }}>CAST</h3>
+          <div className="mt-4">
+            <h3 className="font-semibold mb-2 text-xs" style={{ color: primaryColor }}>CAST</h3>
             <ScrollArea className="w-full">
               <div className="flex gap-2 pb-2">
                 {movie.cast.map(c => (
                   <div key={c.id} className="flex-shrink-0 text-center">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-secondary ring-1 ring-white/10">
+                    <div className="w-10 h-10 rounded-full overflow-hidden bg-secondary">
                       {c.profileUrl ? (
                         <Image
                           src={c.profileUrl}
                           alt={c.name}
-                          width={48}
-                          height={48}
+                          width={40}
+                          height={40}
                           className="w-full h-full object-cover"
                           unoptimized
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-gray-400" />
+                          <User className="w-3 h-3 text-gray-400" />
                         </div>
                       )}
                     </div>
-                    <p className="text-white text-[9px] mt-1 truncate w-12">{c.name}</p>
+                    <p className="text-white text-[8px] mt-0.5 truncate w-10">{c.name}</p>
                   </div>
                 ))}
               </div>
