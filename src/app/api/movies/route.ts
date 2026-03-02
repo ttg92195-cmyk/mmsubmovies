@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 
-// Force dynamic rendering
+// Force dynamic rendering but allow caching
 export const dynamic = 'force-dynamic'
+export const revalidate = 60 // Cache for 60 seconds
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)
@@ -17,6 +18,7 @@ export async function GET(request: NextRequest) {
     const iconic = searchParams.get('iconic')
     const search = searchParams.get('search')
     const genre = searchParams.get('genre')
+    const simple = searchParams.get('simple') // Light version for lists
 
     const where: Record<string, unknown> = {}
 
@@ -46,6 +48,35 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Simple query for list views (faster)
+    if (simple === 'true') {
+      const movies = await db.movie.findMany({
+        where,
+        select: {
+          id: true,
+          title: true,
+          posterUrl: true,
+          backdropUrl: true,
+          rating: true,
+          year: true,
+          duration: true,
+          genre: true,
+          isSeries: true,
+          isTrending: true,
+          isIconic: true,
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+
+      return NextResponse.json(
+        { success: true, data: movies },
+        { headers: { 
+          'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+        } }
+      )
+    }
+
+    // Full query for detail views
     const movies = await db.movie.findMany({
       where,
       include: {
@@ -70,7 +101,9 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { success: true, data: movies },
-      { headers: { 'Cache-Control': 'no-store, max-age=0' } }
+      { headers: { 
+        'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=120',
+      } }
     )
   } catch (error) {
     console.error('Error fetching movies:', error)

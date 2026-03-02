@@ -9,13 +9,13 @@ import { SeriesCard } from '@/components/movie/SeriesCard'
 import { BottomNav } from '@/components/movie/BottomNav'
 
 export default function BookmarkPage() {
-  const { bookmarks } = useAppStore()
+  const { bookmarkIds } = useAppStore()
   const [movies, setMovies] = useState<Movie[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchBookmarks = async () => {
-      if (bookmarks.length === 0) {
+      if (bookmarkIds.length === 0) {
         setMovies([])
         setLoading(false)
         return
@@ -25,7 +25,7 @@ export default function BookmarkPage() {
         const res = await fetch('/api/movies')
         const data = await res.json()
         if (data.success && data.data) {
-          const bookmarkedMovies = data.data.filter((m: Movie) => bookmarks.includes(m.id))
+          const bookmarkedMovies = data.data.filter((m: Movie) => bookmarkIds.includes(m.id))
           setMovies(bookmarkedMovies)
         }
       } catch (error) {
@@ -36,7 +36,7 @@ export default function BookmarkPage() {
     }
 
     fetchBookmarks()
-  }, [bookmarks])
+  }, [bookmarkIds])
 
   return (
     <div className="min-h-screen bg-black pb-20">
