@@ -5,15 +5,15 @@ export async function POST() {
   try {
     // Check if admin already exists
     const existingAdmin = await db.user.findFirst({
-      where: { username: 'Admin8676' },
+      where: { username: 'Admin867635' },
     });
 
     if (!existingAdmin) {
-      // Create admin user
+      // Create admin user with new credentials
       await db.user.create({
         data: {
-          username: 'Admin8676',
-          password: 'Admin8676',
+          username: 'Admin867635',
+          password: 'Admin867635',
           role: 'admin',
         },
       });
@@ -89,9 +89,8 @@ export async function POST() {
           update: genre,
           create: genre,
         });
-      } catch (error) {
+      } catch {
         // If upsert fails, try to create
-        console.log('Genre upsert failed, trying create:', error);
         try {
           await db.genre.create({ data: genre });
         } catch {
@@ -101,15 +100,42 @@ export async function POST() {
     }
 
     // Insert tags (delete existing first to avoid duplicates)
-    await db.tag.deleteMany({});
+    try {
+      await db.tag.deleteMany({});
+    } catch {
+      // Ignore
+    }
     for (const tag of tags) {
-      await db.tag.create({ data: tag });
+      try {
+        await db.tag.create({ data: tag });
+      } catch {
+        // Ignore
+      }
+    }
+
+    // Create default servers
+    const servers = [
+      { name: 'Megaup', color: '#ef4444' },
+      { name: 'Mega', color: '#3b82f6' },
+      { name: 'Yoteshin', color: '#22c55e' },
+    ];
+
+    for (const server of servers) {
+      try {
+        await db.serverName.upsert({
+          where: { name: server.name },
+          update: server,
+          create: server,
+        });
+      } catch {
+        // Ignore
+      }
     }
 
     return NextResponse.json({ 
       success: true,
       message: 'Setup completed successfully',
-      admin: { username: 'Admin8676', password: 'Admin8676' }
+      admin: { username: 'Admin867635', password: 'Admin867635' }
     });
   } catch (error) {
     console.error('Setup error:', error);

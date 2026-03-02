@@ -908,7 +908,9 @@ export default function Home() {
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-red-400"><Film className="inline mr-2" />Movies</h2>
-            <Button size="sm" onClick={() => setCurrentView('movies')} className="bg-red-600 hover:bg-red-700">View All</Button>
+            <Link href="/movies">
+              <Button size="sm" className="bg-red-600 hover:bg-red-700">View All</Button>
+            </Link>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {movies.slice(0, 12).map((m) => <MovieCard key={m.id} movie={m} type="movie" />)}
@@ -918,7 +920,9 @@ export default function Home() {
         <section className="mb-8">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-red-400"><Tv className="inline mr-2" />TV Series</h2>
-            <Button size="sm" onClick={() => setCurrentView('tvshows')} className="bg-red-600 hover:bg-red-700">View All</Button>
+            <Link href="/tv-series">
+              <Button size="sm" className="bg-red-600 hover:bg-red-700">View All</Button>
+            </Link>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
             {tvShows.slice(0, 12).map((s) => <MovieCard key={s.id} movie={s} type="tv" />)}
@@ -965,7 +969,7 @@ export default function Home() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-[#12151c]/95 backdrop-blur-sm border-b border-red-900/30">
         <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="text-2xl font-bold text-red-500 cursor-pointer" onClick={() => { setCurrentView('home'); setSearchQuery(''); }}>HomieTV</div>
+          <Link href="/" className="text-2xl font-bold text-red-500 cursor-pointer">HomieTV</Link>
           
           <div className="flex-1 max-w-md mx-4">
             <div className="relative">
@@ -982,9 +986,9 @@ export default function Home() {
         {menuOpen && (
           <div className="absolute top-full left-0 right-0 bg-[#12151c] border-b border-red-900/30 py-4 px-4 shadow-xl z-50">
             <nav className="container mx-auto flex flex-col gap-2">
-              <a onClick={() => { setCurrentView('home'); setMenuOpen(false); }} className="p-3 hover:bg-red-900/20 rounded-lg cursor-pointer">Home</a>
-              <a onClick={() => { setCurrentView('movies'); setMenuOpen(false); }} className="p-3 hover:bg-red-900/20 rounded-lg cursor-pointer">Movies</a>
-              <a onClick={() => { setCurrentView('tvshows'); setMenuOpen(false); }} className="p-3 hover:bg-red-900/20 rounded-lg cursor-pointer">TV Series</a>
+              <Link href="/" onClick={() => setMenuOpen(false)} className="p-3 hover:bg-red-900/20 rounded-lg cursor-pointer">Home</Link>
+              <Link href="/movies" onClick={() => setMenuOpen(false)} className="p-3 hover:bg-red-900/20 rounded-lg cursor-pointer">Movies</Link>
+              <Link href="/tv-series" onClick={() => setMenuOpen(false)} className="p-3 hover:bg-red-900/20 rounded-lg cursor-pointer">TV Series</Link>
               <div className="border-t border-red-900/30 my-2" />
               {isAuthenticated ? (
                 <>
