@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
@@ -16,6 +16,7 @@ import {
   Calendar,
   ExternalLink,
 } from 'lucide-react'
+import { MovieEditModal } from './MovieEditModal'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -34,7 +35,6 @@ interface DownloadLink {
   quality: string
   url: string
   source: string
-  size?: string
 }
 
 export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
@@ -51,27 +51,28 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
   const [movie, setMovie] = useState<Movie | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'synopsis' | 'cast'>('synopsis')
+  const [showEditModal, setShowEditModal] = useState(false)
+
+  const fetchMovie = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/movies/${movieId}`)
+      const data = await res.json()
+      if (data.success) {
+        setMovie(data.data)
+      } else {
+        router.push('/')
+      }
+    } catch (error) {
+      console.error('Error fetching movie:', error)
+      router.push('/')
+    } finally {
+      setLoading(false)
+    }
+  }, [movieId, router])
 
   useEffect(() => {
-    const fetchMovie = async () => {
-      try {
-        const res = await fetch(`/api/movies/${movieId}`)
-        const data = await res.json()
-        if (data.success) {
-          setMovie(data.data)
-        } else {
-          router.push('/')
-        }
-      } catch (error) {
-        console.error('Error fetching movie:', error)
-        router.push('/')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchMovie()
-  }, [movieId, router])
+  }, [fetchMovie])
 
   const handleBack = () => {
     router.back()
@@ -343,7 +344,10 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
       {/* Admin Actions */}
       {user?.isAdmin && (
         <div className="px-4 mt-6 flex gap-2">
-          <button className="flex-1 py-2.5 rounded-lg bg-gray-800 text-white text-sm font-medium">
+          <button 
+            onClick={() => setShowEditModal(true)}
+            className="flex-1 py-2.5 rounded-lg bg-gray-800 text-white text-sm font-medium"
+          >
             Edit
           </button>
           <button 
@@ -354,6 +358,14 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
           </button>
         </div>
       )}
+
+      {/* Edit Modal */}
+      <MovieEditModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        movie={movie}
+        onUpdate={fetchMovie}
+      />
 
       <BottomNav />
     </div>

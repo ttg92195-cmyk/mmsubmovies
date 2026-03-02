@@ -10,20 +10,21 @@ const navItems = [
   { id: 'home', label: 'Home', icon: Home, path: '/' },
   { id: 'movies', label: 'Movies', icon: Film, path: '/movies' },
   { id: 'series', label: 'Series', icon: Tv, path: '/series' },
-  { id: 'search', label: 'Search', icon: Search, path: '/?page=search' },
+  { id: 'search', label: 'Search', icon: Search, path: null }, // No path, uses state
 ]
 
 export function BottomNav() {
+  const router = useRouter()
   const pathname = usePathname()
-  const { primaryColor } = useAppStore()
+  const { primaryColor, currentPage, setCurrentPage } = useAppStore()
 
-  // Determine active nav based on pathname
+  // Determine active nav based on pathname and currentPage
   const getActiveNav = () => {
+    if (currentPage === 'search') return 'search'
     if (pathname === '/') return 'home'
     if (pathname === '/movies') return 'movies'
     if (pathname === '/series') return 'series'
     if (pathname.startsWith('/movie/') || pathname.startsWith('/series/')) {
-      // On detail pages, highlight based on type
       if (pathname.startsWith('/movie/')) return 'movies'
       if (pathname.startsWith('/series/')) return 'series'
     }
@@ -31,6 +32,22 @@ export function BottomNav() {
   }
 
   const activeNav = getActiveNav()
+
+  const handleNavClick = (item: typeof navItems[0]) => {
+    if (item.id === 'search') {
+      // For search, set state and navigate to home
+      setCurrentPage('search')
+      router.push('/')
+    } else {
+      // For other items, clear search state and navigate
+      if (currentPage === 'search') {
+        setCurrentPage('home')
+      }
+      if (item.path) {
+        router.push(item.path)
+      }
+    }
+  }
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-white/10 z-50">
@@ -40,9 +57,9 @@ export function BottomNav() {
           const isActive = activeNav === item.id
           
           return (
-            <Link
+            <button
               key={item.id}
-              href={item.path}
+              onClick={() => handleNavClick(item)}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors min-w-[60px]'
               )}
@@ -53,7 +70,7 @@ export function BottomNav() {
                 style={isActive ? { fill: `${primaryColor}20`, color: primaryColor } : undefined} 
               />
               <span className="text-xs">{item.label}</span>
-            </Link>
+            </button>
           )
         })}
       </div>

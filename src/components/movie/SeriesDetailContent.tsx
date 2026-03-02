@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
 import {
@@ -14,6 +14,7 @@ import {
   Tv,
   ChevronDown,
 } from 'lucide-react'
+import { SeriesEditModal } from './SeriesEditModal'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { useAppStore, Movie } from '@/store'
@@ -57,27 +58,28 @@ export function SeriesDetailContent({ seriesId }: SeriesDetailContentProps) {
   const [selectedSeason, setSelectedSeason] = useState(1)
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null)
   const [showSeasonDropdown, setShowSeasonDropdown] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+
+  const fetchSeries = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/movies/${seriesId}`)
+      const data = await res.json()
+      if (data.success && data.data.isSeries) {
+        setSeries(data.data)
+      } else {
+        router.push('/')
+      }
+    } catch (error) {
+      console.error('Error fetching series:', error)
+      router.push('/')
+    } finally {
+      setLoading(false)
+    }
+  }, [seriesId, router])
 
   useEffect(() => {
-    const fetchSeries = async () => {
-      try {
-        const res = await fetch(`/api/movies/${seriesId}`)
-        const data = await res.json()
-        if (data.success && data.data.isSeries) {
-          setSeries(data.data)
-        } else {
-          router.push('/')
-        }
-      } catch (error) {
-        console.error('Error fetching series:', error)
-        router.push('/')
-      } finally {
-        setLoading(false)
-      }
-    }
-
     fetchSeries()
-  }, [seriesId, router])
+  }, [fetchSeries])
 
   const handleBack = () => {
     router.back()
@@ -431,7 +433,10 @@ export function SeriesDetailContent({ seriesId }: SeriesDetailContentProps) {
       {/* Admin Actions */}
       {user?.isAdmin && (
         <div className="px-4 mt-6 flex gap-2">
-          <button className="flex-1 py-2.5 rounded-lg bg-gray-800 text-white text-sm font-medium">
+          <button 
+            onClick={() => setShowEditModal(true)}
+            className="flex-1 py-2.5 rounded-lg bg-gray-800 text-white text-sm font-medium"
+          >
             Edit
           </button>
           <button 
@@ -442,6 +447,14 @@ export function SeriesDetailContent({ seriesId }: SeriesDetailContentProps) {
           </button>
         </div>
       )}
+
+      {/* Edit Modal */}
+      <SeriesEditModal
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        series={series}
+        onUpdate={fetchSeries}
+      />
 
       <BottomNav />
     </div>

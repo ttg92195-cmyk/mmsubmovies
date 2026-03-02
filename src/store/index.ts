@@ -40,7 +40,7 @@ export interface Movie {
         thumbnailUrl?: string | null
         duration?: number | null
         overview?: string | null
-        downloadLinks: { id: string; quality: string; url: string }[]
+        downloadLinks: { id: string; quality: string; url: string; source: string }[]
       }[]
     }[]
   } | null
