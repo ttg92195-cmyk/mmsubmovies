@@ -14,6 +14,8 @@ import {
   Tv,
   Edit,
   Trash2,
+  Clock,
+  Calendar,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -22,6 +24,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { SourcesModal } from '@/components/movie/SourcesModal'
 import { useAppStore, Movie } from '@/store'
 import { toast } from 'sonner'
+import { BottomNav } from '@/components/movie/BottomNav'
 
 interface MovieDetailContentProps {
   movieId: string
@@ -147,38 +150,35 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
 
   const currentSeason = movie.series?.seasons?.find(s => s.seasonNumber === selectedSeason)
   const bookmarked = isBookmarked(movie.id)
+  const genres = movie.genre ? movie.genre.split(', ').filter(Boolean) : []
 
   return (
     <div className="min-h-screen bg-black pb-20">
-      {/* Header with Backdrop */}
-      <div className="relative">
-        {/* Backdrop Image - aspect video ratio */}
-        <div className="relative w-full aspect-video">
-          {movie.backdropUrl ? (
-            <Image
-              src={movie.backdropUrl}
-              alt={movie.title}
-              fill
-              className="object-cover"
-              priority
-              unoptimized
-            />
-          ) : (
-            <div className="w-full h-full bg-gray-900" />
-          )}
-          {/* Gradient overlay at bottom */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-        </div>
-
-        {/* Back Button - overlay on backdrop */}
+      {/* Backdrop */}
+      <div className="relative w-full h-56">
+        {movie.backdropUrl ? (
+          <Image
+            src={movie.backdropUrl}
+            alt={movie.title}
+            fill
+            className="object-cover"
+            priority
+            unoptimized
+          />
+        ) : (
+          <div className="w-full h-full bg-gray-900" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
+        
+        {/* Back Button */}
         <button
           onClick={handleBack}
           className="absolute top-3 left-3 w-9 h-9 rounded-full bg-black/60 flex items-center justify-center backdrop-blur-sm z-10"
         >
           <ArrowLeft className="w-5 h-5 text-white" />
         </button>
-
-        {/* Bookmark Button - overlay on backdrop */}
+        
+        {/* Bookmark Button */}
         <button
           onClick={handleToggleBookmark}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/60 flex items-center justify-center backdrop-blur-sm z-10"
@@ -189,12 +189,15 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
             <Bookmark className="w-5 h-5 text-white" />
           )}
         </button>
+      </div>
 
-        {/* Poster and Info - overlapping backdrop */}
-        <div className="absolute bottom-0 left-0 right-0 px-3 flex gap-3 transform translate-y-1/2">
+      {/* Content */}
+      <div className="relative px-4 -mt-20">
+        {/* Poster and Info */}
+        <div className="flex gap-4">
           {/* Poster */}
-          <div className="w-[100px] flex-shrink-0">
-            <div className="relative aspect-[2/3] rounded-lg overflow-hidden shadow-xl ring-1 ring-white/10">
+          <div className="w-[120px] flex-shrink-0">
+            <div className="relative aspect-[2/3] rounded-xl overflow-hidden shadow-2xl ring-1 ring-white/10">
               {movie.posterUrl ? (
                 <Image
                   src={movie.posterUrl}
@@ -206,90 +209,105 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
               ) : (
                 <div className="w-full h-full bg-gray-800 flex items-center justify-center">
                   {movie.isSeries ? (
-                    <Tv className="w-8 h-8 text-gray-500" />
+                    <Tv className="w-10 h-10 text-gray-600" />
                   ) : (
-                    <User className="w-8 h-8 text-gray-500" />
+                    <User className="w-10 h-10 text-gray-600" />
                   )}
                 </div>
               )}
             </div>
           </div>
-
+          
           {/* Info */}
-          <div className="flex-1 min-w-0 pb-1">
-            <h1 className="text-lg font-bold text-white line-clamp-2">{movie.title}</h1>
-            <div className="flex items-center gap-1.5 mt-1 text-xs">
-              <Star className="w-3.5 h-3.5 fill-yellow-500 text-yellow-500" />
-              <span className="text-white">{movie.rating.toFixed(1)}</span>
+          <div className="flex-1 pt-16 min-w-0">
+            <h1 className="text-xl font-bold text-white leading-tight line-clamp-2">{movie.title}</h1>
+            
+            <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-1">
+                <Star className="w-4 h-4 fill-yellow-500 text-yellow-500" />
+                <span className="text-white font-medium">{movie.rating.toFixed(1)}</span>
+              </div>
               <span className="text-gray-500">•</span>
-              <span className="text-gray-400">{movie.year}</span>
+              <span className="text-gray-300">{movie.year}</span>
               {movie.duration && (
                 <>
                   <span className="text-gray-500">•</span>
-                  <span className="text-gray-400">{movie.duration} min</span>
+                  <span className="text-gray-300 flex items-center gap-1">
+                    <Clock className="w-3 h-3" />
+                    {movie.duration} min
+                  </span>
                 </>
               )}
             </div>
-            <div className="flex flex-wrap gap-1 mt-2">
-              {movie.genre.split(', ').slice(0, 3).map(g => (
-                <Badge key={g} variant="secondary" className="text-[10px] px-2 py-0.5">{g}</Badge>
+            
+            {/* Genres */}
+            <div className="flex flex-wrap gap-1.5 mt-3">
+              {genres.slice(0, 3).map(g => (
+                <Badge 
+                  key={g} 
+                  variant="secondary" 
+                  className="text-[10px] px-2 py-0.5 bg-gray-800 text-gray-200 border-0"
+                >
+                  {g}
+                </Badge>
               ))}
               {movie.isSeries && movie.series && (
-                <Badge variant="outline" className="text-[10px] px-2 py-0.5" style={{ borderColor: primaryColor, color: primaryColor }}>
+                <Badge 
+                  variant="outline" 
+                  className="text-[10px] px-2 py-0.5"
+                  style={{ borderColor: primaryColor, color: primaryColor }}
+                >
                   {movie.series.status}
                 </Badge>
               )}
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Content - starts after poster overlap */}
-      <div className="px-3 mt-20">
         {/* Action Buttons */}
-        <div className="flex gap-2">
+        <div className="flex gap-3 mt-6">
           <Button
-            className="flex-1 h-10"
-            style={{ backgroundColor: primaryColor, color: 'black' }}
+            className="flex-1 h-11 text-black font-semibold"
+            style={{ backgroundColor: primaryColor }}
             onClick={handleWatchNow}
           >
-            <Play className="w-4 h-4 mr-1.5" />
+            <Play className="w-4 h-4 mr-2 fill-current" />
             Watch Now
           </Button>
           <Button
             variant="outline"
-            className="flex-1 h-10"
+            className="flex-1 h-11 font-semibold"
             style={{ borderColor: primaryColor, color: primaryColor }}
             onClick={handleDownload}
           >
-            <Download className="w-4 h-4 mr-1.5" />
+            <Download className="w-4 h-4 mr-2" />
             Download
           </Button>
         </div>
 
         {/* Download Warning */}
         {!allDownloadEnabled && (
-          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-2.5 mt-3">
+          <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-3 mt-4">
             <p className="text-yellow-400 text-xs">
-              Enable &quot;All Download&quot; in Menu → Download to access download links
+              ⚠️ Enable &quot;All Download&quot; in Menu → Download to access download links
             </p>
           </div>
         )}
 
         {/* Synopsis */}
-        <div className="mt-4">
-          <h3 className="font-semibold text-sm mb-1.5" style={{ color: primaryColor }}>SYNOPSIS</h3>
-          <p className="text-gray-300 text-xs leading-relaxed">{movie.overview || 'No synopsis available.'}</p>
+        <div className="mt-6">
+          <h3 className="font-bold text-sm mb-2" style={{ color: primaryColor }}>SYNOPSIS</h3>
+          <p className="text-gray-300 text-sm leading-relaxed">{movie.overview || 'No synopsis available.'}</p>
         </div>
 
         {/* Series Episodes */}
         {movie.isSeries && movie.series && movie.series.seasons && movie.series.seasons.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-semibold text-sm mb-2" style={{ color: primaryColor }}>EPISODES</h3>
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-gray-400 text-xs">Season:</span>
+          <div className="mt-6">
+            <h3 className="font-bold text-sm mb-3" style={{ color: primaryColor }}>EPISODES</h3>
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-gray-400 text-sm">Season:</span>
               <Select value={selectedSeason.toString()} onValueChange={(v) => setSelectedSeason(parseInt(v))}>
-                <SelectTrigger className="w-24 bg-gray-800 border-white/10 h-8 text-xs">
+                <SelectTrigger className="w-28 bg-gray-800 border-white/10 h-9 text-sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -307,7 +325,7 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
                 {currentSeason.episodes.map(ep => (
                   <div
                     key={ep.id}
-                    className="bg-gray-800 rounded-md overflow-hidden cursor-pointer hover:bg-gray-700 active:scale-95 transition-transform"
+                    className="bg-gray-800 rounded-lg overflow-hidden cursor-pointer hover:bg-gray-700 active:scale-95 transition-transform"
                     onClick={() => handleEpisodeClick(ep as never)}
                   >
                     <div className="relative aspect-video">
@@ -321,17 +339,17 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
                         />
                       ) : (
                         <div className="w-full h-full bg-gray-700 flex items-center justify-center">
-                          <Play className="w-5 h-5 text-gray-400" />
+                          <Play className="w-5 h-5 text-gray-500" />
                         </div>
                       )}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                          <Play className="w-3.5 h-3.5 text-white" />
+                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                          <Play className="w-4 h-4 text-white fill-white" />
                         </div>
                       </div>
                     </div>
-                    <div className="p-1.5">
-                      <p className="text-white text-[10px] text-center truncate">EP {ep.episodeNumber}</p>
+                    <div className="p-1.5 text-center">
+                      <p className="text-white text-[10px] font-medium">EP {ep.episodeNumber}</p>
                     </div>
                   </div>
                 ))}
@@ -342,29 +360,30 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
 
         {/* Cast */}
         {movie.cast && movie.cast.length > 0 && (
-          <div className="mt-4">
-            <h3 className="font-semibold text-sm mb-2" style={{ color: primaryColor }}>CAST</h3>
+          <div className="mt-6">
+            <h3 className="font-bold text-sm mb-3" style={{ color: primaryColor }}>CAST</h3>
             <ScrollArea className="w-full">
               <div className="flex gap-3 pb-2">
                 {movie.cast.map(c => (
                   <div key={c.id} className="flex-shrink-0 text-center">
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 ring-1 ring-white/10">
+                    <div className="w-14 h-14 rounded-full overflow-hidden bg-gray-800 ring-1 ring-white/10">
                       {c.profileUrl ? (
                         <Image
                           src={c.profileUrl}
                           alt={c.name}
-                          width={48}
-                          height={48}
+                          width={56}
+                          height={56}
                           className="w-full h-full object-cover"
                           unoptimized
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <User className="w-4 h-4 text-gray-500" />
+                          <User className="w-5 h-5 text-gray-600" />
                         </div>
                       )}
                     </div>
-                    <p className="text-white text-[10px] mt-1 truncate w-12">{c.name}</p>
+                    <p className="text-white text-[10px] mt-1 truncate w-14">{c.name}</p>
+                    <p className="text-gray-500 text-[9px] truncate w-14">{c.character}</p>
                   </div>
                 ))}
               </div>
@@ -403,6 +422,8 @@ export function MovieDetailContent({ movieId, type }: MovieDetailContentProps) {
         downloadLinks={selectedLinks}
         title={movie.title}
       />
+
+      <BottomNav />
     </div>
   )
 }

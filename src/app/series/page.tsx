@@ -2,119 +2,44 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Search, Filter, Grid, List } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ArrowLeft, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { useAppStore, Movie } from '@/store'
 import { SeriesCard } from '@/components/movie/SeriesCard'
 import { BottomNav } from '@/components/movie/BottomNav'
+import { Pagination } from '@/components/movie/Pagination'
 
-// Sample fallback data for Vercel deployment
+const ITEMS_PER_PAGE = 20
+
+// Sample fallback data
 const SAMPLE_SERIES: Movie[] = [
-  {
-    id: '4',
-    title: 'Breaking Bad',
-    overview: 'When Walter White, a New Mexico chemistry teacher, is diagnosed with Stage III cancer.',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg',
-    backdropUrl: 'https://image.tmdb.org/t/p/original/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg',
-    rating: 9.0,
-    year: 2008,
-    duration: 47,
-    genre: 'Drama, Crime',
-    language: 'en',
-    isSeries: true,
-    isFeatured: false,
-    isTrending: true,
-    isIconic: true,
-    cast: [],
-    downloadLinks: [],
-    series: {
-      id: 's1',
-      status: 'Ended',
-      seasons: [
-        { id: 'ss1', seasonNumber: 1, episodes: Array.from({ length: 7 }, (_, i) => ({ id: `ep1${i}`, episodeNumber: i + 1, title: `Episode ${i + 1}`, downloadLinks: [] })) },
-        { id: 'ss2', seasonNumber: 2, episodes: Array.from({ length: 13 }, (_, i) => ({ id: `ep2${i}`, episodeNumber: i + 1, title: `Episode ${i + 1}`, downloadLinks: [] })) },
-      ]
-    }
-  },
-  {
-    id: '5',
-    title: 'Game of Thrones',
-    overview: 'Seven noble families fight for control of the mythical land of Westeros.',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg',
-    backdropUrl: 'https://image.tmdb.org/t/p/original/suopoADq0k8YZr4dQXcU6pToj6s.jpg',
-    rating: 8.5,
-    year: 2011,
-    duration: 60,
-    genre: 'Drama, Fantasy, Action',
-    language: 'en',
-    isSeries: true,
-    isFeatured: false,
-    isTrending: true,
-    isIconic: false,
-    cast: [],
-    downloadLinks: [],
-    series: {
-      id: 's2',
-      status: 'Ended',
-      seasons: [
-        { id: 'ss3', seasonNumber: 1, episodes: Array.from({ length: 10 }, (_, i) => ({ id: `ep3${i}`, episodeNumber: i + 1, title: `Episode ${i + 1}`, downloadLinks: [] })) },
-        { id: 'ss4', seasonNumber: 2, episodes: Array.from({ length: 10 }, (_, i) => ({ id: `ep4${i}`, episodeNumber: i + 1, title: `Episode ${i + 1}`, downloadLinks: [] })) },
-      ]
-    }
-  },
-  {
-    id: '6',
-    title: 'Stranger Things',
-    overview: 'When a young boy vanishes, a small town uncovers a mystery.',
-    posterUrl: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg',
-    backdropUrl: 'https://image.tmdb.org/t/p/original/56v2KjBlU4XaOv9rVYEQypROD7P.jpg',
-    rating: 8.6,
-    year: 2016,
-    duration: 50,
-    genre: 'Drama, Mystery, Sci-Fi & Fantasy',
-    language: 'en',
-    isSeries: true,
-    isFeatured: false,
-    isTrending: true,
-    isIconic: false,
-    cast: [],
-    downloadLinks: [],
-    series: {
-      id: 's3',
-      status: 'Returning Series',
-      seasons: [
-        { id: 'ss5', seasonNumber: 1, episodes: Array.from({ length: 8 }, (_, i) => ({ id: `ep5${i}`, episodeNumber: i + 1, title: `Episode ${i + 1}`, downloadLinks: [] })) },
-        { id: 'ss6', seasonNumber: 2, episodes: Array.from({ length: 9 }, (_, i) => ({ id: `ep6${i}`, episodeNumber: i + 1, title: `Episode ${i + 1}`, downloadLinks: [] })) },
-      ]
-    }
-  },
+  { id: '4', title: 'Breaking Bad', overview: 'When Walter White is diagnosed with cancer.', posterUrl: 'https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg', backdropUrl: 'https://image.tmdb.org/t/p/original/tsRy63Mu5cu8etL1X7ZLyf7UP1M.jpg', rating: 9.0, year: 2008, duration: 47, genre: 'Drama, Crime', language: 'en', isSeries: true, isFeatured: false, isTrending: true, isIconic: true, cast: [], downloadLinks: [], series: { id: 's1', status: 'Ended', seasons: [] } },
+  { id: '5', title: 'Game of Thrones', overview: 'Seven noble families fight for control.', posterUrl: 'https://image.tmdb.org/t/p/w500/1XS1oqL89opfnbLl8WnZY1O1uJx.jpg', backdropUrl: 'https://image.tmdb.org/t/p/original/suopoADq0k8YZr4dQXcU6pToj6s.jpg', rating: 8.5, year: 2011, duration: 60, genre: 'Drama, Fantasy, Action', language: 'en', isSeries: true, isFeatured: false, isTrending: true, isIconic: false, cast: [], downloadLinks: [], series: { id: 's2', status: 'Ended', seasons: [] } },
+  { id: '6', title: 'Stranger Things', overview: 'When a young boy vanishes.', posterUrl: 'https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg', backdropUrl: 'https://image.tmdb.org/t/p/original/56v2KjBlU4XaOv9rVYEQypROD7P.jpg', rating: 8.6, year: 2016, duration: 50, genre: 'Drama, Mystery, Sci-Fi & Fantasy', language: 'en', isSeries: true, isFeatured: false, isTrending: true, isIconic: false, cast: [], downloadLinks: [], series: { id: 's3', status: 'Returning Series', seasons: [] } },
 ]
 
 export default function SeriesPage() {
-  const { primaryColor, headerText } = useAppStore()
+  const { primaryColor } = useAppStore()
   const [series, setSeries] = useState<Movie[]>([])
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState('newest')
   const [isLoading, setIsLoading] = useState(true)
+  const [currentPage, setCurrentPage] = useState(1)
 
   // Fetch series
   const fetchSeries = useCallback(async () => {
     try {
       setIsLoading(true)
-      const res = await fetch('/api/movies?type=series', { cache: 'no-store' })
+      const res = await fetch('/api/movies?type=series&simple=true', { cache: 'no-store' })
       const data = await res.json()
       if (data.success && data.data && data.data.length > 0) {
         setSeries(data.data.filter((m: Movie) => m.isSeries))
       } else {
-        // Use sample data for Vercel
         setSeries(SAMPLE_SERIES)
       }
     } catch (error) {
       console.error('Failed to fetch series:', error)
-      // Use sample data on error
       setSeries(SAMPLE_SERIES)
     } finally {
       setIsLoading(false)
@@ -124,6 +49,11 @@ export default function SeriesPage() {
   useEffect(() => {
     fetchSeries()
   }, [fetchSeries])
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchQuery, sortBy])
 
   // Filter and sort
   const filteredSeries = useMemo(() => {
@@ -137,10 +67,10 @@ export default function SeriesPage() {
 
     switch (sortBy) {
       case 'newest':
-        result = [...result].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        result = [...result].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime())
         break
       case 'oldest':
-        result = [...result].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+        result = [...result].sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime())
         break
       case 'rating':
         result = [...result].sort((a, b) => b.rating - a.rating)
@@ -153,10 +83,12 @@ export default function SeriesPage() {
     return result
   }, [series, searchQuery, sortBy])
 
-  // Get all genres
-  const allGenres = useMemo(() => {
-    return [...new Set(series.flatMap(m => m.genre.split(', ')))].filter(Boolean).sort()
-  }, [series])
+  // Pagination
+  const totalPages = Math.ceil(filteredSeries.length / ITEMS_PER_PAGE)
+  const paginatedSeries = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return filteredSeries.slice(start, start + ITEMS_PER_PAGE)
+  }, [filteredSeries, currentPage])
 
   return (
     <div className="min-h-screen bg-black pb-20">
@@ -184,24 +116,22 @@ export default function SeriesPage() {
             />
           </div>
 
-          <div className="flex gap-2">
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="bg-secondary border-white/10 flex-1">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="newest">Newest First</SelectItem>
-                <SelectItem value="oldest">Oldest First</SelectItem>
-                <SelectItem value="rating">Highest Rating</SelectItem>
-                <SelectItem value="title">Title A-Z</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="bg-secondary border-white/10 w-full">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="rating">Highest Rating</SelectItem>
+              <SelectItem value="title">Title A-Z</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </header>
 
       {/* Content */}
-      <main className="px-4">
+      <main className="px-3">
         {isLoading ? (
           <div className="text-center py-12">
             <div 
@@ -212,14 +142,21 @@ export default function SeriesPage() {
           </div>
         ) : filteredSeries.length > 0 ? (
           <>
-            <p className="text-gray-400 text-sm mb-4">
-              {filteredSeries.length} series found
+            <p className="text-gray-400 text-xs mb-3 px-1">
+              {filteredSeries.length} series • Page {currentPage} of {totalPages}
             </p>
             <div className="grid grid-cols-3 gap-2">
-              {filteredSeries.map(s => (
+              {paginatedSeries.map(s => (
                 <SeriesCard key={s.id} series={s} showGenre />
               ))}
             </div>
+            
+            {/* Pagination */}
+            <Pagination 
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
           </>
         ) : (
           <div className="text-center py-12">
@@ -231,7 +168,6 @@ export default function SeriesPage() {
         )}
       </main>
 
-      {/* Bottom Navigation */}
       <BottomNav />
     </div>
   )
