@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, memo } from 'react';
+import { useRouter } from 'next/navigation';
 import { Menu, X, Star, Play, Film, Tv, Settings, LogIn, LogOut, Clock, Calendar, Trash2, Edit, Save, Search, Download, Plus, ChevronLeft, ChevronRight, Check, ChevronDown, ChevronUp, Trash, XCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -11,6 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { Toaster } from '@/components/ui/sonner';
+import Link from 'next/link';
 
 // Types
 interface Movie {
@@ -108,33 +110,37 @@ const getGenreNames = (genreIds: number[] | string[]): string =>
 
 const years = ['all', ...Array.from({ length: 27 }, (_, i) => (2026 - i).toString())];
 
-// Movie Card
-const MovieCard = memo(function MovieCard({ movie, type = 'movie', onClick }: { 
-  movie: Movie; type?: 'movie' | 'tv'; onClick: () => void;
+// Movie Card - Uses Link for navigation
+const MovieCard = memo(function MovieCard({ movie, type = 'movie' }: { 
+  movie: Movie; type?: 'movie' | 'tv';
 }) {
+  const href = type === 'tv' ? `/tv/${movie.tmdbId || movie.id}` : `/movie/${movie.tmdbId || movie.id}`;
+  
   return (
-    <Card className="bg-[#1a1e2e] border-0 overflow-hidden hover:scale-105 transition-transform cursor-pointer group" onClick={onClick}>
-      <div className="relative aspect-[2/3]">
-        <img src={movie.poster || '/placeholder-poster.jpg'} alt={movie.title} className="w-full h-full object-cover" />
-        <div className="absolute top-1 right-1 bg-black/80 rounded px-1.5 py-0.5 flex items-center gap-1">
-          <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
-          <span className="text-xs">{movie.rating?.toFixed(1) || 'N/A'}</span>
+    <Link href={href}>
+      <Card className="bg-[#1a1e2e] border-0 overflow-hidden hover:scale-105 transition-transform cursor-pointer group">
+        <div className="relative aspect-[2/3]">
+          <img src={movie.poster || '/placeholder-poster.jpg'} alt={movie.title} className="w-full h-full object-cover" />
+          <div className="absolute top-1 right-1 bg-black/80 rounded px-1.5 py-0.5 flex items-center gap-1">
+            <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+            <span className="text-xs">{movie.rating?.toFixed(1) || 'N/A'}</span>
+          </div>
+          {type === 'tv' && movie.seasons ? (
+            <div className="absolute top-1 left-1 bg-red-600 rounded px-1.5 py-0.5 text-xs font-bold">{movie.seasons} Season{movie.seasons > 1 ? 's' : ''}</div>
+          ) : movie.quality && (
+            <div className="absolute top-1 left-1 bg-red-600 rounded px-1.5 py-0.5 text-xs font-bold">{movie.quality}</div>
+          )}
         </div>
-        {type === 'tv' && movie.seasons ? (
-          <div className="absolute top-1 left-1 bg-red-600 rounded px-1.5 py-0.5 text-xs font-bold">{movie.seasons} Season{movie.seasons > 1 ? 's' : ''}</div>
-        ) : movie.quality && (
-          <div className="absolute top-1 left-1 bg-red-600 rounded px-1.5 py-0.5 text-xs font-bold">{movie.quality}</div>
-        )}
-      </div>
-      <CardContent className="p-2">
-        <h3 className="font-medium text-sm truncate">{movie.title}</h3>
-        <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-          <span>{movie.year || 'N/A'}</span>
-          {movie.runtime && <><span>•</span><span>{Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m</span></>}
-        </div>
-        <p className="text-xs text-gray-500 truncate">{getGenreNames(Array.isArray(movie.genres) ? movie.genres : [])}</p>
-      </CardContent>
-    </Card>
+        <CardContent className="p-2">
+          <h3 className="font-medium text-sm truncate">{movie.title}</h3>
+          <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
+            <span>{movie.year || 'N/A'}</span>
+            {movie.runtime && <><span>•</span><span>{Math.floor(movie.runtime / 60)}h {movie.runtime % 60}m</span></>}
+          </div>
+          <p className="text-xs text-gray-500 truncate">{getGenreNames(Array.isArray(movie.genres) ? movie.genres : [])}</p>
+        </CardContent>
+      </Card>
+    </Link>
   );
 });
 
@@ -829,7 +835,7 @@ export default function Home() {
             <>
               <h3 className="text-lg font-semibold mb-3">Movies</h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3 mb-6">
-                {searchResults.movies.map((m) => <MovieCard key={m.id} movie={m} type="movie" onClick={() => openDetail(m, 'movie')} />)}
+                {searchResults.movies.map((m) => <MovieCard key={m.id} movie={m} type="movie" />)}
               </div>
             </>
           )}
@@ -837,7 +843,7 @@ export default function Home() {
             <>
               <h3 className="text-lg font-semibold mb-3">TV Series</h3>
               <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-                {searchResults.tvShows.map((s) => <MovieCard key={s.id} movie={s} type="tv" onClick={() => openDetail(s, 'tv')} />)}
+                {searchResults.tvShows.map((s) => <MovieCard key={s.id} movie={s} type="tv" />)}
               </div>
             </>
           )}
@@ -853,7 +859,7 @@ export default function Home() {
             <Button variant="outline" size="sm" onClick={() => setCurrentView('home')} className="border-red-600"><ChevronLeft className="w-4 h-4 mr-1" />Back</Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {movies.map((m) => <MovieCard key={m.id} movie={m} type="movie" onClick={() => openDetail(m, 'movie')} />)}
+            {movies.map((m) => <MovieCard key={m.id} movie={m} type="movie" />)}
           </div>
           <div className="flex items-center justify-center gap-2 mt-6">
             <Button variant="outline" size="sm" disabled={moviesPage === 1} onClick={() => setMoviesPage(p => p - 1)}><ChevronLeft /></Button>
@@ -872,7 +878,7 @@ export default function Home() {
             <Button variant="outline" size="sm" onClick={() => setCurrentView('home')} className="border-red-600"><ChevronLeft className="w-4 h-4 mr-1" />Back</Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {tvShows.map((s) => <MovieCard key={s.id} movie={s} type="tv" onClick={() => openDetail(s, 'tv')} />)}
+            {tvShows.map((s) => <MovieCard key={s.id} movie={s} type="tv" />)}
           </div>
           <div className="flex items-center justify-center gap-2 mt-6">
             <Button variant="outline" size="sm" disabled={tvShowsPage === 1} onClick={() => setTVShowsPage(p => p - 1)}><ChevronLeft /></Button>
@@ -891,7 +897,7 @@ export default function Home() {
             <Button variant="outline" size="sm" onClick={() => { setCurrentView('home'); setSelectedGenre(null); }} className="border-red-600"><ChevronLeft className="w-4 h-4 mr-1" />Back</Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {filteredItems.map((item) => <MovieCard key={item.id} movie={item} type={selectedGenre.type as 'movie' | 'tv'} onClick={() => openDetail(item, selectedGenre.type as 'movie' | 'tv')} />)}
+            {filteredItems.map((item) => <MovieCard key={item.id} movie={item} type={selectedGenre.type as 'movie' | 'tv'} />)}
           </div>
         </section>
       );
@@ -905,7 +911,7 @@ export default function Home() {
             <Button size="sm" onClick={() => setCurrentView('movies')} className="bg-red-600 hover:bg-red-700">View All</Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {movies.slice(0, 12).map((m) => <MovieCard key={m.id} movie={m} type="movie" onClick={() => openDetail(m, 'movie')} />)}
+            {movies.slice(0, 12).map((m) => <MovieCard key={m.id} movie={m} type="movie" />)}
           </div>
         </section>
 
@@ -915,7 +921,7 @@ export default function Home() {
             <Button size="sm" onClick={() => setCurrentView('tvshows')} className="bg-red-600 hover:bg-red-700">View All</Button>
           </div>
           <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-            {tvShows.slice(0, 12).map((s) => <MovieCard key={s.id} movie={s} type="tv" onClick={() => openDetail(s, 'tv')} />)}
+            {tvShows.slice(0, 12).map((s) => <MovieCard key={s.id} movie={s} type="tv" />)}
           </div>
         </section>
 
@@ -1003,187 +1009,6 @@ export default function Home() {
         <p className="text-sm text-gray-400">Copyright © 2025 HomieTV. All Rights Reserved.</p>
       </footer>
 
-      {/* Detail Modal */}
-      <Dialog open={detailModalOpen} onOpenChange={setDetailModalOpen}>
-        <DialogContent className="bg-[#12151c] border-red-900/30 max-w-3xl max-h-[90vh] overflow-y-auto">
-          {selectedItem && (
-            <>
-              <div className="relative w-full h-56 -mt-6 -mx-6 mb-4 overflow-hidden rounded-t-lg">
-                <img src={selectedItem.backdrop || selectedItem.poster || '/placeholder.jpg'} alt={selectedItem.title} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#12151c] to-transparent" />
-              </div>
-              
-              <DialogHeader>
-                <div className="flex items-start justify-between">
-                  <DialogTitle className="text-2xl flex-1 mr-4">
-                    {isEditing ? (
-                      <Input 
-                        value={editForm.title || ''} 
-                        onChange={(e) => setEditForm({...editForm, title: e.target.value})} 
-                        className="bg-[#1a1e2e] text-lg font-semibold"
-                        placeholder="Movie Title"
-                      />
-                    ) : selectedItem.title}
-                  </DialogTitle>
-                  {isAuthenticated && (
-                    <div className="flex gap-2 shrink-0">
-                      {isEditing ? (
-                        <>
-                          <Button size="sm" onClick={handleSaveEdit} disabled={isGenerating} className="bg-green-600">
-                            <Save className="w-4 h-4 mr-1" />{isGenerating ? 'Saving...' : 'Save'}
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => { setIsEditing(false); setEditForm(selectedItem); }}>Cancel</Button>
-                        </>
-                      ) : (
-                        <>
-                          <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}><Edit className="w-4 h-4 mr-1" />Edit</Button>
-                          {itemDbId && (
-                            <Button size="sm" variant="destructive" onClick={handleDelete}><Trash2 className="w-4 h-4 mr-1" />Delete</Button>
-                          )}
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </DialogHeader>
-              
-              <div className="flex gap-4 mt-4">
-                <div className="flex-shrink-0 w-32">
-                  <img src={selectedItem.poster || '/placeholder.jpg'} alt={selectedItem.title} className="w-full rounded-lg" />
-                </div>
-                <div className="flex-1 space-y-3">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <div className="flex items-center gap-1 bg-black/50 rounded px-2 py-1">
-                      <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-                      <span>{selectedItem.rating?.toFixed(1) || 'N/A'}</span>
-                    </div>
-                    {isEditing ? (
-                      <Select value={editForm.quality || ''} onValueChange={(v) => setEditForm({...editForm, quality: v})}>
-                        <SelectTrigger className="bg-[#1a1e2e] h-7 w-24 text-xs"><SelectValue placeholder="Quality" /></SelectTrigger>
-                        <SelectContent className="bg-[#1a1e2e]">
-                          <SelectItem value="4K">4K</SelectItem>
-                          <SelectItem value="1080p">1080p</SelectItem>
-                          <SelectItem value="720p">720p</SelectItem>
-                          <SelectItem value="CAM">CAM</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    ) : selectedItem.quality && (
-                      <span className="bg-red-600 rounded px-2 py-1 text-xs">{selectedItem.quality}</span>
-                    )}
-                    {selectedItem.seasons && <span className="bg-purple-600 rounded px-2 py-1 text-xs">{selectedItem.seasons} Season{selectedItem.seasons > 1 ? 's' : ''}</span>}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm text-gray-400">
-                    {isEditing ? (
-                      <div className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4" />
-                        <Input 
-                          type="number" 
-                          value={editForm.year || ''} 
-                          onChange={(e) => setEditForm({...editForm, year: parseInt(e.target.value) || null})}
-                          className="bg-[#1a1e2e] h-7 w-20 text-xs"
-                          placeholder="Year"
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1"><Calendar className="w-4 h-4" />{selectedItem.year || 'N/A'}</div>
-                    )}
-                    {selectedItem.runtime && <div className="flex items-center gap-1"><Clock className="w-4 h-4" />{Math.floor(selectedItem.runtime / 60)}h {selectedItem.runtime % 60}m</div>}
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {Array.isArray(selectedItem.genres) && selectedItem.genres.map((g) => (
-                      <span key={String(g)} className="px-2 py-1 rounded text-xs" style={{ backgroundColor: genreColors[Number(g)] || '#ef4444' }}>{genreNames[Number(g)] || g}</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="mt-4">
-                <h4 className="font-semibold mb-2 text-red-400">Overview</h4>
-                {isEditing ? (
-                  <textarea 
-                    value={editForm.overview || ''} 
-                    onChange={(e) => setEditForm({...editForm, overview: e.target.value})}
-                    className="w-full h-32 bg-[#1a1e2e] border border-red-900/30 rounded-lg p-3 text-sm text-gray-300 resize-none focus:outline-none focus:ring-2 focus:ring-red-500"
-                    placeholder="Movie overview..."
-                  />
-                ) : (
-                  <p className="text-sm text-gray-300">{selectedItem.overview || 'No overview available.'}</p>
-                )}
-              </div>
-              
-              {/* Download Links for Movies */}
-              {selectedType === 'movie' && (
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3 text-red-400 flex items-center gap-2"><Download className="w-5 h-5" />Download Links</h4>
-                  {renderDownloadTable(downloadLinks)}
-                  {isAuthenticated && renderAddDownloadForm()}
-                </div>
-              )}
-              
-              {/* Seasons and Episodes for TV Series */}
-              {selectedType === 'tv' && (
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-3 text-red-400 flex items-center gap-2"><Tv className="w-5 h-5" />Seasons and Episodes</h4>
-                  
-                  {tvSeasons.length > 0 ? (
-                    <div className="space-y-2">
-                      {tvSeasons.map((season) => (
-                        <div key={season.id} className="bg-[#1a1e2e] rounded-lg overflow-hidden">
-                          <div onClick={() => toggleSeason(season.id)} className="flex items-center justify-between p-3 cursor-pointer hover:bg-[#252a3d]">
-                            <div className="flex items-center gap-2">
-                              {expandedSeasons.has(season.id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                              <span className="font-medium">Season {season.seasonNumber}</span>
-                              {season.name && <span className="text-gray-400 text-sm">- {season.name}</span>}
-                            </div>
-                            <span className="text-gray-400 text-sm">{season.episodes?.length || season.episodeCount} episodes</span>
-                          </div>
-                          
-                          {expandedSeasons.has(season.id) && season.episodes && (
-                            <div className="border-t border-red-900/30">
-                              {season.episodes.map((episode) => (
-                                <div key={episode.id} className="border-b border-red-900/20 last:border-b-0">
-                                  <div onClick={() => toggleEpisode(episode.id)} className="flex items-center gap-3 p-3 cursor-pointer hover:bg-[#252a3d]">
-                                    {expandedEpisodes.has(episode.id) ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                                    <div className="flex-1">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-red-400 text-sm font-medium">E{episode.episodeNumber}</span>
-                                        {episode.name && <span className="text-sm">{episode.name}</span>}
-                                      </div>
-                                      <div className="flex items-center gap-2 text-xs text-gray-400 mt-1">
-                                        {episode.airDate && <span>{episode.airDate}</span>}
-                                        {episode.runtime && <><span>•</span><span>{episode.runtime} min</span></>}
-                                      </div>
-                                    </div>
-                                    {(episodeDownloadLinks[episode.id]?.length || 0) > 0 && (
-                                      <span className="bg-red-600 rounded px-2 py-0.5 text-xs">{episodeDownloadLinks[episode.id]?.length}</span>
-                                    )}
-                                  </div>
-                                  
-                                  {expandedEpisodes.has(episode.id) && (
-                                    <div className="p-3 pt-0 bg-[#12151c]">
-                                      {renderDownloadTable(episodeDownloadLinks[episode.id] || [], episode.id)}
-                                      {isAuthenticated && renderAddDownloadForm(episode.id)}
-                                    </div>
-                                  )}
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-400">
-                      <Tv className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                      <p>{itemDbId ? 'No seasons available' : 'Save to database to view seasons'}</p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
 
       {/* Login Modal */}
       <Dialog open={adminModalOpen} onOpenChange={setAdminModalOpen}>

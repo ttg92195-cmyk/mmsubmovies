@@ -3,37 +3,51 @@ import { db } from './db';
 import { v4 as uuidv4 } from 'uuid';
 
 const SESSION_COOKIE_NAME = 'homietv_session';
-const SESSION_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+const SESSION_EXPIRY_HOURS = 24;
 
-// Simple in-memory session store (in production, use Redis or database)
-const sessions = new Map<string, { userId: string; expiresAt: number }>();
-
+// Create a new session in database
 export async function createSession(userId: string): Promise<string> {
-  const sessionId = uuidv4();
-  const expiresAt = Date.now() + SESSION_EXPIRY_MS;
+  const token = uuidv4();
+  const expiresAt = new Date(Date.now() + SESSION_EXPIRY_HOURS * 60 * 60 * 1000);
   
-  sessions.set(sessionId, { userId, expiresAt });
+  await db.session.create({
+    data: {
+      userId,
+      token,
+      expiresAt,
+    },
+  });
   
-  return sessionId;
+  return token;
 }
 
-export async function getSession(sessionId: string): Promise<{ userId: string } | null> {
-  const session = sessions.get(sessionId);
+// Get session from database
+export async function getSession(token: string): Promise<{ userId: string } | null> {
+  const session = await db.session.findUnique({
+    where: { token },
+  });
   
   if (!session) return null;
   
-  if (Date.now() > session.expiresAt) {
-    sessions.delete(sessionId);
+  // Check if expired
+  if (new Date() > session.expiresAt) {
+    await db.session.delete({ where: { token } });
     return null;
   }
   
   return { userId: session.userId };
 }
 
-export async function deleteSession(sessionId: string): Promise<void> {
-  sessions.delete(sessionId);
+// Delete session from database
+export async function deleteSession(token: string): Promise<void> {
+  try {
+    await db.session.delete({ where: { token } });
+  } catch {
+    // Session might not exist
+  }
 }
 
+// Validate user credentials
 export async function validateCredentials(username: string, password: string): Promise<string | null> {
   const user = await db.user.findFirst({
     where: {
@@ -45,38 +59,51 @@ export async function validateCredentials(username: string, password: string): P
   return user?.id || null;
 }
 
-export async function setSessionCookie(sessionId: string): Promise<void> {
+// Set session cookie
+export async function setSessionCookie(token: string): Promise<void> {
   const cookieStore = await cookies();
-  cookieStore.set(SESSION_COOKIE_NAME, sessionId, {
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
-    maxAge: SESSION_EXPIRY_MS / 1000,
+    maxAge: SESSION_EXPIRY_HOURS * 60 * 60,
     path: '/',
   });
 }
 
+// Get session from cookie
 export async function getSessionFromCookie(): Promise<{ userId: string } | null> {
   const cookieStore = await cookies();
-  const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   
-  if (!sessionId) return null;
+  if (!token) return null;
   
-  return getSession(sessionId);
+  return getSession(token);
 }
 
+// Clear session cookie and delete from database
 export async function clearSessionCookie(): Promise<void> {
   const cookieStore = await cookies();
-  const sessionId = cookieStore.get(SESSION_COOKIE_NAME)?.value;
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   
-  if (sessionId) {
-    await deleteSession(sessionId);
+  if (token) {
+    await deleteSession(token);
   }
   
   cookieStore.delete(SESSION_COOKIE_NAME);
 }
 
+// Check if user is admin
 export async function isAdmin(): Promise<boolean> {
   const session = await getSessionFromCookie();
   return session !== null;
+}
+
+// Clean up expired sessions (can be called periodically)
+export async function cleanupExpiredSessions(): Promise<void> {
+  await db.session.deleteMany({
+    where: {
+      expiresAt: { lt: new Date() },
+    },
+  });
 }
