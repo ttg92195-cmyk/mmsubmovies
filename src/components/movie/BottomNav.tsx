@@ -1,6 +1,7 @@
 'use client'
 
-import { useRouter, usePathname } from 'next/navigation'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { Home, Film, Tv, Bookmark } from 'lucide-react'
 import { useAppStore } from '@/store'
 import { cn } from '@/lib/utils'
@@ -13,9 +14,8 @@ const navItems = [
 ]
 
 export function BottomNav() {
-  const router = useRouter()
   const pathname = usePathname()
-  const { primaryColor, currentPage } = useAppStore()
+  const { primaryColor } = useAppStore()
 
   // Determine active nav based on pathname
   const getActiveNav = () => {
@@ -38,9 +38,9 @@ export function BottomNav() {
           const isActive = activeNav === item.id
           
           return (
-            <button
+            <Link
               key={item.id}
-              onClick={() => router.push(item.path)}
+              href={item.path}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 px-4 py-2 transition-colors min-w-[60px]'
               )}
@@ -51,7 +51,7 @@ export function BottomNav() {
                 style={isActive ? { fill: `${primaryColor}20`, color: primaryColor } : undefined} 
               />
               <span className="text-xs">{item.label}</span>
-            </button>
+            </Link>
           )
         })}
       </div>
