@@ -27,6 +27,7 @@ export interface Movie {
   isFeatured: boolean
   isTrending: boolean
   isIconic: boolean
+  createdAt?: string
   series?: {
     id: string
     status: string

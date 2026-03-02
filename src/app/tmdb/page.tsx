@@ -483,7 +483,7 @@ export default function TMDBPage() {
                       }`}
                       style={{ 
                         borderColor: isSelected ? primaryColor : 'transparent',
-                        ringColor: isSelected ? `${primaryColor}40` : undefined
+                        ['--tw-ring-color' as string]: isSelected ? `${primaryColor}40` : undefined
                       }}
                       onClick={() => toggleSelection(movie.id)}
                     >

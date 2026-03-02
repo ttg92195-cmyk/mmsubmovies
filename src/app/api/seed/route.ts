@@ -279,9 +279,6 @@ export async function GET() {
                       id: generateId(),
                       episodeNumber: ep.episodeNumber,
                       title: ep.title,
-                      thumbnailUrl: ep.thumbnailUrl,
-                      duration: ep.duration,
-                      overview: ep.overview,
                     }))
                   }
                 }))

@@ -10,10 +10,9 @@ import { useAppStore, Movie } from '@/store'
 
 interface HomeViewProps {
   onMenuClick: () => void
-  onMovieClick: (movie: Movie) => void
 }
 
-export function HomeView({ onMenuClick, onMovieClick }: HomeViewProps) {
+export function HomeView({ onMenuClick }: HomeViewProps) {
   const { settings, setCurrentPage } = useAppStore()
   const [movies, setMovies] = useState<Movie[]>([])
   const [series, setSeries] = useState<Movie[]>([])
@@ -74,7 +73,7 @@ export function HomeView({ onMenuClick, onMovieClick }: HomeViewProps) {
       </header>
 
       {/* Hero Banner */}
-      <HeroBanner movies={featuredMovies} onMovieClick={onMovieClick} />
+      <HeroBanner movies={featuredMovies} />
 
       {/* Iconic Movies Section */}
       {iconicMovies.length > 0 && (
@@ -93,12 +92,9 @@ export function HomeView({ onMenuClick, onMovieClick }: HomeViewProps) {
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {iconicMovies.slice(0, 6).map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onClick={() => onMovieClick(movie)}
-                size="sm"
-              />
+              <div key={movie.id} className="flex-shrink-0 w-28">
+                <MovieCard movie={movie} />
+              </div>
             ))}
           </div>
         </section>
@@ -121,11 +117,9 @@ export function HomeView({ onMenuClick, onMovieClick }: HomeViewProps) {
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {trendingMovies.slice(0, 10).map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onClick={() => onMovieClick(movie)}
-              />
+              <div key={movie.id} className="flex-shrink-0 w-28">
+                <MovieCard movie={movie} />
+              </div>
             ))}
           </div>
         </section>
@@ -148,11 +142,9 @@ export function HomeView({ onMenuClick, onMovieClick }: HomeViewProps) {
           </div>
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2">
             {series.slice(0, 10).map((s) => (
-              <SeriesCard
-                key={s.id}
-                series={s}
-                onClick={() => onMovieClick(s)}
-              />
+              <div key={s.id} className="flex-shrink-0 w-28">
+                <SeriesCard series={s} />
+              </div>
             ))}
           </div>
         </section>
@@ -175,12 +167,7 @@ export function HomeView({ onMenuClick, onMovieClick }: HomeViewProps) {
           </div>
           <div className="grid grid-cols-3 gap-3">
             {movies.slice(0, 6).map((movie) => (
-              <MovieCard
-                key={movie.id}
-                movie={movie}
-                onClick={() => onMovieClick(movie)}
-                size="sm"
-              />
+              <MovieCard key={movie.id} movie={movie} />
             ))}
           </div>
         </section>
