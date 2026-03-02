@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  password     String
+  role         String   @default("admin")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Movie {
+  id          String   @id @default(cuid())
+  title       String
+  poster      String?
+  backdrop    String?
+  year        Int?
+  rating      Float?
+  quality     String?
+  runtime     Int?
+  genres      String?  // JSON string of genre IDs
+  overview    String?
+  tmdbId      Int?
+  progress    Int?     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  downloads   DownloadLink[]
+}
+
+model TVShow {
+  id          String   @id @default(cuid())
+  title       String
+  poster      String?
+  backdrop    String?
+  year        Int?
+  rating      Float?
+  quality     String?
+  seasons     Int?
+  genres      String?  // JSON string of genre IDs
+  overview    String?
+  tmdbId      Int?
+  progress    Int?     @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  seasonsData TVSeason[]
+}
+
+model TVSeason {
+  id          String   @id @default(cuid())
+  tvShowId    String
+  seasonNumber Int
+  name        String?
+  episodeCount Int     @default(0)
+  overview    String?
+  poster      String?
+  airDate     String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  tvShow      TVShow   @relation(fields: [tvShowId], references: [id], onDelete: Cascade)
+  episodes    TVEpisode[]
+  
+  @@unique([tvShowId, seasonNumber])
+}
+
+model TVEpisode {
+  id            String   @id @default(cuid())
+  seasonId      String
+  episodeNumber Int
+  name          String?
+  overview      String?
+  stillPath     String?
+  airDate       String?
+  runtime       Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  season        TVSeason @relation(fields: [seasonId], references: [id], onDelete: Cascade)
+  downloads     DownloadLink[]
+  
+  @@unique([seasonId, episodeNumber])
+}
+
+model DownloadLink {
+  id          String   @id @default(cuid())
+  movieId     String?
+  episodeId   String?
+  serverName  String
+  url         String
+  size        String   @default("")
+  resolution  String   @default("")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  movie       Movie?      @relation(fields: [movieId], references: [id], onDelete: Cascade)
+  episode     TVEpisode?  @relation(fields: [episodeId], references: [id], onDelete: Cascade)
+}
+
+model ServerName {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  color       String   @default("#ef4444")
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Resolution {
+  id          String   @id @default(cuid())
+  name        String   @unique  // e.g., "4K", "1080p", "720p", "480p"
+  width       Int?
+  height      Int?
+  isActive    Boolean  @default(true)
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Genre {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#3b82f6")
+  type      String   @default("movie") // movie or tv
+  tmdbId    Int?
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([tmdbId, type])
+}
+
+model Tag {
+  id        String   @id @default(cuid())
+  name      String
+  color     String   @default("#3b82f6")
+  type      String   @default("movie") // movie or tv
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
